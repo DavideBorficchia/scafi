@@ -19,8 +19,11 @@
 package it.unibo.scafi.distrib.actor.server
 
 import akka.actor.{ActorRef, Props}
-import it.unibo.scafi.distrib.actor.server.{Platform => BasePlatform}
+import it.unibo.scafi.distrib.actor.MsgNeighborhood
+import it.unibo.scafi.distrib.{LSensorName, UID}
 import it.unibo.scafi.space.MetricSpatialAbstraction
+
+import scala.concurrent.java8.FuturesConvertersImpl.P
 
 /**
  * Specializes an [[it.unibo.scafi.distrib.actor.Platform]] into a "centralized platform" where
@@ -29,10 +32,11 @@ import it.unibo.scafi.space.MetricSpatialAbstraction
  *     neighborhood state.
  */
 
-trait SpatialPlatform extends BasePlatform {
-  thisVery: MetricSpatialAbstraction =>
+trait P
 
+trait LocationSensorProvider {
   val LocationSensorName: LSensorName
+}
 
   case class MsgWithPosition(id: UID, pos: P)
 
@@ -41,12 +45,15 @@ trait SpatialPlatform extends BasePlatform {
       super.defaultProfileSettings().copy(serverActorProps = SpatialServerActor.props(_))
   }
 
-  @transient override val settingsFactory = new SettingsFactorySpatial
+  trait SettingsFactorySpatialProvider {
+    val settingsFactory = new SettingsFactorySpatial
+  }
+
 
   class SpatialServerActor(val space: MutableMetricSpace[UID],
                            val scheduler: Option[ActorRef])
     extends AbstractServerActor
-    with ObservableServerActor {
+    with ObservableServerActor with LocationSensorProvider {
 
     override def neighborhood(id: UID): Set[UID] = {
       if(space.contains(id)) space.getNeighbors(id).toSet else Set()
@@ -69,6 +76,6 @@ trait SpatialPlatform extends BasePlatform {
 
   object SpatialServerActor extends Serializable {
     def props(sched: Option[ActorRef] = None): Props =
-      Props(classOf[SpatialServerActor], thisVery, buildNewSpace(Seq()), sched)
+      Props(classOf[SpatialServerActor], buildNewSpace(Seq()), sched)
   }
 }

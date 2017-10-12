@@ -19,11 +19,11 @@
 package it.unibo.scafi.distrib.actor.p2p
 
 import akka.actor.{Actor, Props}
+import it.unibo.scafi.distrib.actor._
+import it.unibo.scafi.distrib.{ComputationExport, ExecScope, Program, UID}
 
 import scala.util.{Failure, Success}
 import scala.concurrent.duration._
-
-trait PlatformDevices { self: Platform.Subcomponent =>
 
   /**
    * Neighbourhood management for devices in a P2P platform.
@@ -49,7 +49,7 @@ trait PlatformDevices { self: Platform.Subcomponent =>
    * In particular, it needs to propagate each computed state to its neighbors.
    */
   class DeviceActor(override val selfId: UID,
-                    override var aggregateExecutor: Option[ProgramContract],
+                    override var aggregateExecutor: Option[Program],
                     override var execScope: ExecScope)
     extends DynamicComputationDeviceActor
     with MissingCodeManagementBehavior
@@ -83,8 +83,7 @@ trait PlatformDevices { self: Platform.Subcomponent =>
 
   object DeviceActor extends Serializable {
     def props(selfId: UID,
-              program: Option[ProgramContract],
+              program: Option[Program],
               execStrategy: ExecScope): Props =
-      Props(classOf[DeviceActor], self, selfId, program, execStrategy)
+      Props(classOf[DeviceActor], selfId, program, execStrategy)
   }
-}

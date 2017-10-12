@@ -18,14 +18,12 @@
 
 package it.unibo.scafi.distrib.actor
 
-import it.unibo.scafi.distrib.actor.patterns.{ObservableActorBehavior, BasicActorBehavior, PeriodicBehavior, LifecycleBehavior}
+import it.unibo.scafi.distrib.actor.patterns.{BasicActorBehavior, LifecycleBehavior, ObservableActorBehavior, PeriodicBehavior}
+import akka.actor.{Actor, ActorRef, Cancellable}
+import it.unibo.scafi.distrib._
 
-import akka.actor.{ActorRef, Cancellable, Actor}
-
-import scala.collection.mutable.{ Map => MMap }
+import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.duration._
-
-trait PlatformDevices { self: Platform.Subcomponent =>
 
   /**
    * Defines a device lifecycle behavior that depends on the field {{execScope}.
@@ -239,7 +237,7 @@ trait PlatformDevices { self: Platform.Subcomponent =>
     // ABSTRACT MEMBERS
 
     def propagateExportToNeighbors(export: ComputationExport)
-    var aggregateExecutor: Option[ProgramContract]
+    var aggregateExecutor: Option[Program]
 
     // CONCRETE FIELDS
 
@@ -386,4 +384,3 @@ trait PlatformDevices { self: Platform.Subcomponent =>
         mapValues(_.export.get).map(identity)))
     }
   }
-}

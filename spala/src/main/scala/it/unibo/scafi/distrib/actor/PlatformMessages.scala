@@ -20,11 +20,10 @@ package it.unibo.scafi.distrib.actor
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Props, ActorRef}
+import akka.actor.{ActorRef, Props}
+import it.unibo.scafi.distrib._
 
 import scala.concurrent.duration.FiniteDuration
-
-trait PlatformMessages { self: Platform.Subcomponent =>
 
   // Input/information messages (which provides data to the recipient actor)
   case class MsgLocalSensorValue[T](name: LSensorName, value: T)
@@ -39,7 +38,7 @@ trait PlatformMessages { self: Platform.Subcomponent =>
   case class MsgMyFrequency(delay: FiniteDuration)
   case class MyNameIs(id: UID)
   case class MsgRound(id: UID, n: Long)
-  case class MsgProgram(ap: ProgramContract, dependencies: Set[Class[_]] = Set())
+  case class MsgProgram(ap: Program, dependencies: Set[Class[_]] = Set())
   case class MsgAddSensor(name: LSensorName, provider: ()=>Any)
   case class MsgAddPushSensor(ref: ActorRef)
   case class MsgAddActuator(name: LSensorName, consumer: Any=>Unit)
@@ -62,9 +61,7 @@ trait PlatformMessages { self: Platform.Subcomponent =>
   case class MsgGetNeighborhood(id: UID)
   case class MsgGetNeighborhoodExports(id: UID)
   case class MsgNeighborhoodExports(id: UID, nbrs: Map[UID,Option[ComputationExport]]) extends ScafiMessage
-  val MsgGetIds = "msg_get_ids".hashCode
-  val MsgGetExport = "msg_get_export".hashCode
-  val MsgGetNeighbors = "msg_get_neighbors".hashCode
+  object MsgGetIds // = "msg_get_ids".hashCode
+  object MsgGetExport // = "msg_get_export".hashCode
+  object MsgGetNeighbors // = "msg_get_neighbors".hashCode
   case class Ack(id: UID)
-
-}

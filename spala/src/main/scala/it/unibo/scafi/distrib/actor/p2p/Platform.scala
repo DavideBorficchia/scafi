@@ -18,7 +18,9 @@
 
 package it.unibo.scafi.distrib.actor.p2p
 
+import it.unibo.scafi.distrib._
 import it.unibo.scafi.distrib.actor.{Platform => BasePlatform}
+
 import scala.concurrent.duration.DurationInt
 
 /**
@@ -30,10 +32,6 @@ import scala.concurrent.duration.DurationInt
  * It seems that, despite the architecture name, some centralization is needed.
  */
 
-trait Platform extends BasePlatform
-  with PlatformAPIFacade
-  with PlatformDevices {
-
   class SettingsFactoryP2P extends SettingsFactory{
     override def defaultProfileSettings(): ProfileSettings = P2PActorSystemSettings()
     override def defaultSettings(): Settings = {
@@ -42,26 +40,25 @@ trait Platform extends BasePlatform
     }
   }
 
-  @transient override val settingsFactory = new SettingsFactoryP2P
-
-  @transient override val platformFactory = new DistributedPlatformFactory {
-    override def buildPlatformConfigurator(): PlatformConfigurator =
-      PlatformConfigurator
+  trait SettingsFactoryProvider {
+    val settingsFactory = new SettingsFactoryP2P
   }
 
-  /*********************************/
+  trait PlatformFactoryProvider {
+    val platformFactory = new DistributedPlatformFactory {
+      override def buildPlatformConfigurator(): PlatformConfigurator = PlatformConfigurator
+    }
+  }
+
+    /***************
+}******************/
   /******** CMD-LINE PARSER ********/
   /*********************************/
 
-  override def extendParser(p: scopt.OptionParser[Settings]): Unit = {
-    p.head("** Scafi Decentralized Actor System Command Line Program **")
+  class ScafiP2pCmdLineParser extends ScafiCmdLineParser {
+    head("** Scafi Decentralized Actor System Command Line Program **")
 
-    p.opt[Boolean]('g', "gui") action { (x, c) =>
+    opt[Boolean]('g', "gui") action { (x, c) =>
       c.copy(profile = P2PActorSystemSettings(deviceGui = x))
     } text ("Device GUI")
   }
-}
-
-object Platform {
-  type Subcomponent = Platform
-}

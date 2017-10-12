@@ -18,12 +18,12 @@
 
 package it.unibo.scafi.distrib.actor.server
 
-import akka.actor.{Props, ActorRef, Actor}
-import it.unibo.scafi.distrib.actor.{GoOn, MsgStart}
-import it.unibo.scafi.distrib.actor.patterns.{ObservableActorBehavior, BasicActorBehavior}
-import scala.collection.mutable.{ Map => MMap }
+import akka.actor.{Actor, ActorRef, Props}
+import it.unibo.scafi.distrib.{ComputationExport, LSensorName, UID}
+import it.unibo.scafi.distrib.actor._
+import it.unibo.scafi.distrib.actor.patterns.{BasicActorBehavior, ObservableActorBehavior}
 
-trait PlatformServer { self: Platform.Subcomponent =>
+import scala.collection.mutable.{Map => MMap}
 
   /**
    * This actor represents the singleton, central server of a
@@ -158,6 +158,5 @@ trait PlatformServer { self: Platform.Subcomponent =>
 
   object ServerActor extends Serializable {
     def props(sched: Option[ActorRef] = None): Props =
-      Props(classOf[ServerActor], self, sched)
+      Props(classOf[ServerActor], sched)
   }
-}

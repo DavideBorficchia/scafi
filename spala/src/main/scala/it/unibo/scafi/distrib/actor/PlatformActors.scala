@@ -19,8 +19,8 @@
 package it.unibo.scafi.distrib.actor
 
 import akka.actor.{Actor, ActorRef, Props}
+import it.unibo.scafi.distrib.{AggregateApplicationSettings, UID}
 
-trait PlatformActors { self: Platform.Subcomponent =>
 
   /**
    * This is the top-level actor for a given aggregate application in the
@@ -74,5 +74,3 @@ trait PlatformActors { self: Platform.Subcomponent =>
     def props(as: AggregateApplicationSettings): Props =
       Props(classOf[AggregateApplicationActor], self, as)
   }
-
-}

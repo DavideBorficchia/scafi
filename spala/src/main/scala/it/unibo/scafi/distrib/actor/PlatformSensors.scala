@@ -18,9 +18,8 @@
 
 package it.unibo.scafi.distrib.actor
 
+import it.unibo.scafi.distrib.LSensorName
 import it.unibo.scafi.distrib.actor.patterns.PeriodicObservableInputProviderActor
-
-trait PlatformSensors { self: Platform.Subcomponent =>
 
   abstract class PeriodicObservableSensorActor[T](name: LSensorName) extends
   PeriodicObservableInputProviderActor[LSensorName,T](name) {
@@ -29,4 +28,3 @@ trait PlatformSensors { self: Platform.Subcomponent =>
     }
   }
 
-}

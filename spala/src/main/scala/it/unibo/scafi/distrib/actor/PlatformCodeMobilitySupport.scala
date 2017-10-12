@@ -19,15 +19,12 @@
 package it.unibo.scafi.distrib.actor
 
 import it.unibo.scafi.distrib.actor.extensions.CodeMobilityExtension
-import it.unibo.scafi.distrib.{CustomClassLoader, CustomClassLoaderRegistry, LoadClassBytes}
-
-import akka.actor.{ActorRef, Actor}
+import it.unibo.scafi.distrib.{CustomClassLoader, CustomClassLoaderRegistry, LoadClassBytes, Program}
+import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
 import it.unibo.scafi.distrib.actor.patterns.BasicActorBehavior
 
 import scala.concurrent.duration._
-
-trait PlatformCodeMobilitySupport { self: Platform.Subcomponent =>
 
   /**
    * Behavior that should support the retrieval of missing class dependencies.
@@ -83,7 +80,7 @@ trait PlatformCodeMobilitySupport { self: Platform.Subcomponent =>
    */
   trait UpdateableAggregateComputationBehavior
     extends BasicActorBehavior with MissingCodeManagementBehavior { sself: Actor =>
-    def setProgram(et: ProgramContract): Unit
+    def setProgram(et: Program): Unit
 
     override def inputManagementBehavior: Receive = super.inputManagementBehavior.orElse {
       // Program management
@@ -112,7 +109,7 @@ trait PlatformCodeMobilitySupport { self: Platform.Subcomponent =>
     import context.dispatcher
     implicit val timeout: Timeout = 2.seconds
 
-    def shipProgram(program: ProgramContract,
+    def shipProgram(program: Program,
                     dependencies: Set[Class[_]] = Set(),
                     recipients: Set[ActorRef]): Unit = {
       // Load the code associated to the program and its dependencies
@@ -139,4 +136,3 @@ trait PlatformCodeMobilitySupport { self: Platform.Subcomponent =>
     }
   }
 
-}

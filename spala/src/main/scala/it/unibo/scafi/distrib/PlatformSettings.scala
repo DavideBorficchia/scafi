@@ -27,10 +27,11 @@ import java.util.concurrent.TimeUnit
 
 import it.unibo.utils.Interop
 
-trait PlatformSettings { self: Platform.Subcomponent =>
+  trait ProfileSettings extends ConfigurableSettings[ProfileSettings]
 
-  type ProfileSettings <: ConfigurableSettings[ProfileSettings]
-  val settingsFactory: SettingsFactory
+  trait SettingsFactoryProvider {
+    val settingsFactory: SettingsFactory
+  }
 
   trait SettingsFactory extends Serializable {
     def defaultProfileSettings(): ProfileSettings
@@ -41,13 +42,13 @@ trait PlatformSettings { self: Platform.Subcomponent =>
 
   case class Settings(aggregate: AggregateApplicationSettings = AggregateApplicationSettings(),
                       platform: PlatformSettings = PlatformSettings(),
-                      profile: ProfileSettings = settingsFactory.defaultProfileSettings(),
+                      profile: ProfileSettings = null,
                       deviceConfig: DeviceConfigurationSettings = DeviceConfigurationSettings(),
                       execution: ExecutionSettings = ExecutionSettings(),
                       start: Boolean = true)
 
   case class AggregateApplicationSettings(name: String = "untitled",
-                                          program: () => Option[ProgramContract] = () => None)
+                                          program: () => Option[Program] = () => None)
   case class DeviceConfigurationSettings(ids: Set[UID] = Set(),
                                          nbs: Map[UID,Set[UID]] = Map())
   case class DeploymentSettings(host: String = "127.0.0.1",
@@ -112,6 +113,8 @@ trait PlatformSettings { self: Platform.Subcomponent =>
       )
       s
     }
+
+    def settingsFactory: SettingsFactory = null // TODO: handle this
   }
   object AggregateApplicationSettings {
     def fromConfig(c: Config, base: AggregateApplicationSettings = AggregateApplicationSettings()): AggregateApplicationSettings = {
@@ -119,7 +122,7 @@ trait PlatformSettings { self: Platform.Subcomponent =>
       var aas = base.copy(name = c.getString("name"))
       programClass.foreach { programClassName =>
         val klass = Class.forName(programClassName)
-        aas = base.copy(program = () => Some(klass.newInstance().asInstanceOf[ProgramContract]))
+        aas = base.copy(program = () => Some(klass.newInstance().asInstanceOf[Program]))
       }
       aas
     }
@@ -193,16 +196,15 @@ trait PlatformSettings { self: Platform.Subcomponent =>
   /******** CMD-LINE PARSER ********/
   /*********************************/
 
-  /**
-   * Template method for extending the parser in specialized platform components.
-   */
-  def extendParser(p: scopt.OptionParser[Settings]): Unit = { }
+  trait CmdLineParserProvider {
+    val cmdLineParser: ScafiCmdLineParser
+  }
 
-  def cmdLineParser: scopt.OptionParser[Settings] =
-    new ScafiCmdLineParser
-
-  class ScafiCmdLineParser extends scopt.OptionParser[Settings]("<scafi distributed system>") {
+  abstract class ScafiCmdLineParser extends scopt.OptionParser[Settings]("<scafi distributed system>")
+    with InteropProvider {
       extendParser(this)
+
+    def extendParser(p: scopt.OptionParser[Settings]): Unit = { }
 
       opt[String]("loglevel") valueName ("<off|info|warning|debug>") action { (x, c) =>
         c.copy(platform = c.platform.copy(loglevel = x))
@@ -213,7 +215,7 @@ trait PlatformSettings { self: Platform.Subcomponent =>
 
       opt[String]("program") valueName ("<FULLY QUALIFIED CLASS NAME>") action { (x, c) =>
         val klass = Class.forName(x)
-        c.copy(aggregate = c.aggregate.copy(program = () => Some(klass.newInstance().asInstanceOf[ProgramContract])))
+        c.copy(aggregate = c.aggregate.copy(program = () => Some(klass.newInstance().asInstanceOf[Program])))
       } text ("Aggregate program")
 
       opt[String]('h', "host") valueName ("<HOST>") action { (x, c) =>
@@ -304,5 +306,3 @@ trait PlatformSettings { self: Platform.Subcomponent =>
       //note("some notes.\n")
       help("help") text ("prints this usage text")
     }
-
-}

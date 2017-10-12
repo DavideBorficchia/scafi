@@ -20,57 +20,39 @@ package it.unibo.scafi.distrib
 
 import it.unibo.utils.{Interop, Linearizable}
 
-trait BasePlatform {
-  type UID
-  type LSensorName
-  type NSensorName
-  type ComputationContext <: ComputationContextContract
-  type ComputationExport <: ComputationExportContract
-  type DataFactory <: DataFactoryContract
-  type Program <: ProgramContract
+trait UID
 
-  implicit val dataFactory: DataFactory
+trait LSensorName
 
-  implicit val linearUID: Linearizable[UID]
-  implicit val interopUID: Interop[UID]
+trait NSensorName
 
-  trait ComputationContextContract {
-    /*
-    def id: UID
-    def export(nbr: UID): ComputationExport
-    def localSense(name: LSensorName): Any
-    def aggregateSense(name: NSensorName)(nbr: UID): Any
-    */
-  }
+trait ComputationContext {
 
-  trait ComputationExportContract {
-    def root[T](): T
-  }
+}
 
-  trait DataFactoryContract {
-    def context(id: UID,
-                exports: Map[UID,ComputationExport],
-                lsns: Map[LSensorName,Any],
-                nsns: Map[NSensorName,Map[UID,Any]]): ComputationContext
-  }
+trait ComputationExport {
+  def root[T](): T
+}
 
+trait DataFactory {
+  def context(id: UID,
+              exports: Map[UID,ComputationExport],
+              lsns: Map[LSensorName,Any],
+              nsns: Map[NSensorName,Map[UID,Any]]): ComputationContext
+}
+
+trait Program {
   trait ProgramContract {
     def round(ctx: ComputationContext): ComputationExport
   }
 }
 
-/**
- * This component defines a distributed platform and in particular:
- *   - A Façade API for the configuration, setup, and execution of distributed systems
- *   - A corpus of settings and defaults for distributed aggregate systems
- *   - Some general, utility members (string representations for types such as ID, LSNS,..),
- *     used for example in the command-line parser.
- */
-
-trait Platform extends BasePlatform
-  with PlatformAPIFacade
-  with PlatformSettings
-
-object Platform {
-  type Subcomponent = Platform
+trait DataFactoryProvider {
+  implicit val dataFactory: DataFactory
 }
+
+trait InteropProvider {
+  implicit val linearUID: Linearizable[UID]
+  implicit val interopUID: Interop[UID]
+}
+

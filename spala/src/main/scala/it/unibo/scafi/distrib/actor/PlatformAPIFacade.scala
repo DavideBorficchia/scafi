@@ -18,7 +18,7 @@
 
 package it.unibo.scafi.distrib.actor
 
-import it.unibo.scafi.distrib.CustomClassLoader
+import it.unibo.scafi.distrib._
 import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.{Config, ConfigFactory}
 import it.unibo.scafi.distrib.actor.extensions.CodeMobilityExtension
@@ -27,9 +27,8 @@ import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.util.Success
 
-trait PlatformAPIFacade { self: Platform.Subcomponent =>
 
-  type DeviceManager = BasicDeviceManager
+trait DeviceManager extends BasicDeviceManager
 
   /**
    * Represents the façade towards the logical (sub)system.
@@ -38,13 +37,11 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
    * @param actorSys The ActorSystem instance for this subsystem
    * @param appRef The reference to the local top-level actor for this aggregate app
    * @param appSettings The settings for this aggregate application
-   * @param profileSettings The settings for the chosen platform profile
    * @param execScope The setttings related to execution
    */
   abstract class AbstractActorSystemFacade(val actorSys: ActorSystem,
                                            val appRef: ActorRef,
                                            val appSettings: AggregateApplicationSettings,
-                                           val profileSettings: ProfileSettings,
                                            val execScope: ExecScope)
     extends AbstractSystemFacade {
     val logger = actorSys.log
@@ -56,11 +53,11 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
      */
     val deviceGui: Boolean
     def deviceGuiProps(dev: ActorRef): Props
-    def deviceProps(id: UID, program: Option[ProgramContract]): Props
+    def deviceProps(id: UID, program: Option[Program]): Props
 
     var devices: Map[UID, DeviceManager] = Map()
 
-    override def newDevice(id: UID, program: Option[ProgramContract] = None, nbs: Set[UID] = Set()): DeviceManager = {
+    override def newDevice(id: UID, program: Option[Program] = None, nbs: Set[UID] = Set()): DeviceManager = {
       import akka.pattern._
       import scala.concurrent.ExecutionContext.Implicits.global
       implicit val to: akka.util.Timeout = 10.seconds
@@ -126,12 +123,17 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     }
   }
 
+  trait PlatformSpecificConfiguration {
+    //type PlatformSettings <: PlatformSettings
+    type PlatformFacade <: AbstractPlatformFacade
+  }
+
   /**
    * Objects of this class are responsible for the configuration of
    *  the actor-based platform.
    * The façade interface allows the creation of a platform façade.
    */
-  trait ActorPlatformConfigurator extends PlatformConfigurator {
+  trait ActorPlatformConfigurator extends PlatformConfigurator with PlatformSpecificConfiguration {
     def buildPlatformFacade(sys: ActorSystem,
                             s: PlatformSettings,
                             p: ProfileSettings): PlatformFacade
@@ -169,5 +171,3 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
       ) withFallback(ConfigFactory.load("remote_application"))
     }
   }
-
-}

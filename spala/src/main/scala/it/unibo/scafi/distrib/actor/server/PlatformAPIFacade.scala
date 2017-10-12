@@ -18,21 +18,20 @@
 
 package it.unibo.scafi.distrib.actor.server
 
-import akka.actor.{ActorSystem, ActorRef, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.Config
+import it.unibo.scafi.distrib._
 import it.unibo.scafi.distrib.actor._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Success
 
-trait PlatformAPIFacade { self: Platform.Subcomponent =>
-
   /**************************/
   /******** SETTINGS ********/
   /**************************/
 
-  type ProfileSettings = ServerBasedActorSystemSettings
+  trait ProfileSettings extends ServerBasedActorSystemSettings
   case class ServerBasedActorSystemSettings(serverHost: String = "127.0.0.1",
                                             serverPort: Int = 9000,
                                             startServer: Boolean = false,
@@ -78,7 +77,7 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     def refineSettings(s: Settings): Settings = { s }
   }
 
-  class ServerCmdLineMain extends ServerMain {
+  class ServerCmdLineMain extends ServerMain with CmdLineParserProvider {
     override def main(args: Array[String]): Unit = {
       cmdLineParser.parse(args, Settings()) foreach (s => setupServer(s))
     }
@@ -102,7 +101,7 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     }
   }
 
-  type SystemFacade = BasicSystemFacade
+  trait SystemFacade extends BasicSystemFacade
 
   class BasicSystemFacade(actorSys: ActorSystem,
                           appRef: ActorRef,
@@ -218,4 +217,3 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     override def buildPlatformFacade(sys: ActorSystem, s: PlatformSettings, p: ProfileSettings): PlatformFacade =
       new PlatformFacade(sys)
   }
-}

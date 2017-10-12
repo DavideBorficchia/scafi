@@ -18,23 +18,26 @@
 
 package it.unibo.scafi.distrib
 
-trait PlatformAPIFacade { self: Platform.Subcomponent =>
+import akka.actor.ActorSystem.Settings
 
-  trait DistributedPlatformFactory {
+trait DistributedPlatformFactory {
     def buildPlatformConfigurator(): PlatformConfigurator
   }
+
+trait DistributedPlatformFactoryProvider {
   val platformFactory: DistributedPlatformFactory
+}
 
-  type PlatformFacade <: AbstractPlatformFacade
-  type SystemFacade <: AbstractSystemFacade
-  type DeviceManager <: AbstractDeviceManager
+trait PlatformFacade extends AbstractPlatformFacade
+trait SystemFacade extends AbstractSystemFacade
+trait DeviceManager extends AbstractDeviceManager
 
-  trait SystemMain extends App with Serializable {
-    def programBuilder: Option[ProgramContract] = None
+  trait SystemMain extends App with DistributedPlatformFactoryProvider {
+    def programBuilder: Option[Program] = None
 
     def setupSystem(settings: Settings): Unit = {
       val s = refineSettings(settings)
-      val pc = self.platformFactory.buildPlatformConfigurator()
+      val pc = platformFactory.buildPlatformConfigurator()
       val platform = pc.setupPlatform(s.platform, s.profile)
       onPlatformReady(platform)
 
@@ -55,7 +58,7 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     def refineSettings(s: Settings): Settings = { s }
   }
 
-  class CmdLineMain extends SystemMain {
+  class CmdLineMain extends SystemMain with CmdLineParserProvider {
     override def main(args: Array[String]): Unit = {
       cmdLineParser.parse(args, Settings()) foreach (s => setupSystem(s))
     }
@@ -81,7 +84,7 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
 
   trait AbstractSystemFacade {
     def newDevice(id: UID,
-                  program: Option[ProgramContract] = None,
+                  program: Option[Program] = None,
                   neighbors: Set[UID] = Set()): DeviceManager
     def addNeighbor(id: UID, idn: UID): Unit
     def start(): Unit
@@ -117,5 +120,3 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
       (platform, aggregateApp, dm)
     }
   }
-
-}

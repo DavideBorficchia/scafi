@@ -18,17 +18,15 @@
 
 package it.unibo.scafi.distrib.actor.p2p
 
-import akka.actor.{ActorSystem, ActorRef, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.Config
-import it.unibo.scafi.distrib.actor.{GoOn, MsgPropagate}
-
-trait PlatformAPIFacade { self: Platform.Subcomponent =>
+import it.unibo.scafi.distrib._
+import it.unibo.scafi.distrib.actor._
 
   /**************************/
   /******** SETTINGS ********/
   /**************************/
 
-  type ProfileSettings = P2PActorSystemSettings
   case class P2PActorSystemSettings(deviceGui: Boolean = false,
                                     devActorProps: UID => Option[Props] = _ => None,
                                     devGuiActorProps: ActorRef => Option[Props] = _ => None,
@@ -43,21 +41,19 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
   /******** API FACADE ********/
   /****************************/
 
-  type SystemFacade = BasicSystemFacade
-
-  class BasicSystemFacade(actorSys: ActorSystem,
+  class P2PActorSystemFacade(actorSys: ActorSystem,
                           appRef: ActorRef,
                           appSettings: AggregateApplicationSettings,
-                          profSettings: ProfileSettings,
+                          profSettings: P2PActorSystemSettings,
                           execScope: ExecScope,
                           val otherSubsystems: Set[SubsystemSettings] = Set())
-    extends AbstractActorSystemFacade(actorSys, appRef, appSettings, profSettings, execScope) {
+    extends AbstractActorSystemFacade(actorSys, appRef, appSettings, execScope) {
 
     override val deviceGui: Boolean = profSettings.deviceGui
 
     override def deviceGuiProps(dev: ActorRef): Props = profSettings.devGuiActorProps(dev).get
 
-    override def deviceProps(id: UID, program: Option[ProgramContract]): Props =
+    override def deviceProps(id: UID, program: Option[Program]): Props =
       DeviceActor.props(id, program, execScope)
 
     override def start(): Unit = {
@@ -87,19 +83,18 @@ trait PlatformAPIFacade { self: Platform.Subcomponent =>
     }
   }
 
-  class PlatformFacade(val actorSys: ActorSystem,
+  class P2PActorPlatformFacade(val actorSys: ActorSystem,
                        val otherSubsystems: Set[SubsystemSettings])
     extends AbstractPlatformFacade with Serializable {
     override def newAggregateApplication(appSettings: AggregateApplicationSettings,
                                          profileSettings: ProfileSettings,
                                          execScope: ExecScope): SystemFacade = {
       val appRef = actorSys.actorOf(AggregateApplicationActor.props(appSettings), appSettings.name)
-      new BasicSystemFacade(actorSys, appRef, appSettings, profileSettings, execScope, otherSubsystems)
+      new P2PActorSystemFacade()(actorSys, appRef, appSettings, profileSettings, execScope, otherSubsystems)
     }
   }
 
   object PlatformConfigurator extends ActorPlatformConfigurator with Serializable {
-    override def buildPlatformFacade(sys: ActorSystem, s: PlatformSettings, p: P2PActorSystemSettings): PlatformFacade =
-      new PlatformFacade(sys, s.otherSubsystems)
+    override def buildPlatformFacade(sys: ActorSystem, s: PlatformSettings, p: P2PActorSystemSettings): P2PActorPlatformFacade =
+      new P2PActorPlatformFacade(sys, s.otherSubsystems)
   }
-}

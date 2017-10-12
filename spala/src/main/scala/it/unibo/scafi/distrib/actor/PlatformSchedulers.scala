@@ -19,14 +19,12 @@
 package it.unibo.scafi.distrib.actor
 
 import it.unibo.scafi.distrib.actor.patterns.PeriodicBehavior
-
-import akka.actor.{Props, ActorRef, Actor}
+import akka.actor.{Actor, ActorRef, Props}
+import it.unibo.scafi.distrib.{OrderedExecStrategy, RandomExecStrategy, RoundRobinStrategy, UID}
 
 import scala.concurrent.duration._
-import scala.collection.mutable.{ Map => MMap }
+import scala.collection.mutable.{Map => MMap}
 import scala.util.Random
-
-trait PlatformSchedulers { self: Platform.Subcomponent =>
 
   /**
    * A generic scheduler. When it decides or someone decides its time to schedule
@@ -113,5 +111,3 @@ trait PlatformSchedulers { self: Platform.Subcomponent =>
               initialDelay: Option[FiniteDuration] = None): Props =
       Props(classOf[AutonomousScheduler], self, exec, initialDelay, wInterval)
   }
-
-}

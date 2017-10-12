@@ -18,10 +18,11 @@
 
 package it.unibo.scafi.distrib.actor.server
 
-import akka.actor.{Actor, Props, ActorRef}
-import scala.concurrent.duration.DurationInt
+import akka.actor.{Actor, ActorRef, Props}
+import it.unibo.scafi.distrib.actor._
+import it.unibo.scafi.distrib._
 
-trait PlatformDevices { self: Platform.Subcomponent =>
+import scala.concurrent.duration.DurationInt
 
   /**
    * Neighbourhood management for devices in a server-based platform.
@@ -46,7 +47,7 @@ trait PlatformDevices { self: Platform.Subcomponent =>
    *     is sent to the server {{server}}
    */
   class DeviceActor(override val selfId: UID,
-                    override var aggregateExecutor: Option[ProgramContract],
+                    override var aggregateExecutor: Option[Program],
                     override var execScope: ExecScope,
                     val server: ActorRef)
     extends DynamicComputationDeviceActor
@@ -92,9 +93,8 @@ trait PlatformDevices { self: Platform.Subcomponent =>
 
   object DeviceActor extends Serializable {
     def props(selfId: UID,
-              program: Option[ProgramContract],
+              program: Option[Program],
               execStrategy: ExecScope,
               serverActor: ActorRef) =
       Props(classOf[DeviceActor], self, selfId, program, execStrategy, serverActor)
   }
-}
